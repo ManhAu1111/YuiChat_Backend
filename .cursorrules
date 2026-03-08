@@ -1,0 +1,103 @@
+# YuiChat Project Context & AI Persona
+
+## 1. Persona & Goal
+You are an expert Full-Stack Developer specializing in Laravel 11.
+Your task is to build the backend for "YuiChat" - a Multi-Platform Real-time Chat System with Hybrid Storage and P2P-Ready architecture.
+Always write clean, modern, optimized code following SOLID principles.
+
+## 2. Tech Stack
+- Backend: Laravel 11 (PHP 8.2+), MySQL, Redis.
+- Real-time: Laravel Reverb (WebSocket).
+- Notification: Firebase Cloud Messaging (FCM).
+
+## 3. Database Schema (10 Core Tables)
+You MUST strictly follow these exact definitions, relationships, and data types when generating Migrations and Models:
+
+1. `users`
+   - id (PK, BIGINT)
+   - username (VARCHAR 255, unique)
+   - email (VARCHAR 255, unique)
+   - password (VARCHAR 255, nullable)
+   - google_id (VARCHAR 255, nullable)
+   - name (VARCHAR 255)
+   - avatar (VARCHAR 255, nullable)
+   - qr_code_url (VARCHAR 255, nullable)
+   - is_online (BOOLEAN, default false)
+   - last_active_at (TIMESTAMP, nullable)
+
+2. `user_devices`
+   - id (PK, BIGINT)
+   - user_id (FK to users.id, BIGINT)
+   - device_id (VARCHAR 255)
+   - fcm_token (TEXT, nullable)
+   - last_active_at (TIMESTAMP)
+
+3. `user_settings`
+   - id (PK, BIGINT)
+   - user_id (FK to users.id, BIGINT)
+   - theme (VARCHAR 50, default 'system')
+   - language (VARCHAR 10, default 'vi')
+   - push_notifications (BOOLEAN, default true)
+
+4. `friendships`
+   - id (PK, BIGINT)
+   - user_id (FK to users.id, BIGINT)
+   - friend_id (FK to users.id, BIGINT)
+   - status (VARCHAR 50, default 'pending')
+
+5. `user_blocks`
+   - id (PK, BIGINT)
+   - blocker_id (FK to users.id, BIGINT)
+   - blocked_id (FK to users.id, BIGINT)
+   - created_at (TIMESTAMP)
+
+6. `conversations`
+   - id (PK, BIGINT)
+   - is_group (BOOLEAN, default false)
+   - name (VARCHAR 255, nullable)
+   - avatar (VARCHAR 255, nullable)
+   - last_message_id (FK to messages.id, BIGINT, nullable)
+
+7. `participants`
+   - id (PK, BIGINT)
+   - conversation_id (FK to conversations.id, BIGINT)
+   - user_id (FK to users.id, BIGINT)
+   - role (VARCHAR 50, default 'member')
+   - last_read_message_id (FK to messages.id, BIGINT, nullable)
+
+8. `messages`
+   - id (PK, BIGINT)
+   - conversation_id (FK to conversations.id, BIGINT)
+   - sender_id (FK to users.id, BIGINT)
+   - parent_id (FK to messages.id, BIGINT, nullable - For Reply feature)
+   - type (VARCHAR 50, default 'text')
+   - content (TEXT, nullable)
+   - metadata (JSON, nullable)
+   - deleted_at (TIMESTAMP, nullable - SoftDeletes)
+   - created_at & updated_at (TIMESTAMPS)
+
+9. `attachments`
+   - id (PK, BIGINT)
+   - message_id (FK to messages.id, BIGINT)
+   - file_url (VARCHAR 255)
+   - file_type (VARCHAR 100)
+   - source_type (TINYINT, default 0)
+   - file_hash (VARCHAR 255, nullable)
+
+10. `message_reactions`
+    - id (PK, BIGINT)
+    - message_id (FK to messages.id, BIGINT)
+    - user_id (FK to users.id, BIGINT)
+    - reaction (VARCHAR 50)
+
+## 4. CRITICAL MIGRATION RULES (Must Read to Avoid Errors)
+- **Circular Dependency Warning:** `conversations` references `messages` (`last_message_id`), and `messages` references `conversations` (`conversation_id`).
+  - **Solution:** You MUST create the `conversations` migration BEFORE `messages`. In the `conversations` migration, define `last_message_id` just as a regular `foreignId` that is `nullable()`, and set `constrained('messages')->nullOnDelete()`. Do NOT use strict cascading that causes deadlock.
+- Create migrations in this exact order:
+  `users` -> `user_settings` -> `user_devices` -> `friendships` -> `user_blocks` -> `conversations` -> `messages` -> `participants` -> `attachments` -> `message_reactions`.
+
+## 5. Coding Standards for Models
+- Use `HasFactory`. Use `SoftDeletes` ONLY for `Message` model.
+- Define `$fillable` arrays explicitly in all Models.
+- Write strict relationships (`hasMany`, `belongsTo`, `belongsToMany`) with correct return types.
+- Example for User: `public function devices(): HasMany`, `public function friends(): BelongsToMany`, `public function conversations(): BelongsToMany`.
