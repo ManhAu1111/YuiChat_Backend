@@ -32,4 +32,60 @@ class FriendshipController extends Controller
             'data' => $states
         ]);
     }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'friend_id' => 'required|integer'
+        ]);
+
+        try {
+            $this->friendshipService->sendRequest($request->user(), $request->input('friend_id'));
+            return response()->json(['status' => 'success']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    public function accept(Request $request)
+    {
+        $request->validate([
+            'friend_id' => 'required|integer'
+        ]);
+
+        try {
+            $this->friendshipService->acceptRequest($request->user(), $request->input('friend_id'));
+            return response()->json(['status' => 'success']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    public function decline(Request $request)
+    {
+        $request->validate([
+            'friend_id' => 'required|integer'
+        ]);
+
+        try {
+            $this->friendshipService->cancelOrDeclineRequest($request->user()->id, $request->input('friend_id'));
+            return response()->json(['status' => 'success']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    public function destroy(Request $request)
+    {
+        $request->validate([
+            'friend_id' => 'required|integer'
+        ]);
+
+        try {
+            $this->friendshipService->unfriend($request->user()->id, $request->input('friend_id'));
+            return response()->json(['status' => 'success']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 400);
+        }
+    }
 }
