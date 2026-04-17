@@ -13,6 +13,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/search', [UserController::class, 'search']);
     Route::get('/friendship-states', [FriendshipController::class, 'index']);
+    Route::post('/friendships/request', [FriendshipController::class, 'store']);
+    Route::post('/friendships/accept', [FriendshipController::class, 'accept']);
+    Route::delete('/friendships/decline', [FriendshipController::class, 'decline']);
+    Route::delete('/friendships/unfriend', [FriendshipController::class, 'destroy']);
+
 
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);

@@ -2,6 +2,7 @@
 
 namespace App\Modules\User\Notifications;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
@@ -10,19 +11,15 @@ class FriendRequestNoti extends Notification
 {
     use Queueable;
 
-    protected $sender_id;
-    protected $sender_name;
-    protected $avatar;
-    protected $note;
+    public User $sender;
+    public ?string $note;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($sender_id, $sender_name, $avatar, $note = null)
+    public function __construct(User $sender, ?string $note = null)
     {
-        $this->sender_id = $sender_id;
-        $this->sender_name = $sender_name;
-        $this->avatar = $avatar;
+        $this->sender = $sender;
         $this->note = $note;
     }
 
@@ -44,9 +41,9 @@ class FriendRequestNoti extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'sender_id' => $this->sender_id,
-            'sender_name' => $this->sender_name,
-            'avatar' => $this->avatar,
+            'sender_id' => $this->sender->id ?? null,
+            'sender_name' => $this->sender->name ?? null,
+            'avatar' => $this->sender->avatar ?? null,
             'note' => $this->note,
         ];
     }
