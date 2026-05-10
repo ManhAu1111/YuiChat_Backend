@@ -9,3 +9,12 @@ Broadcast::channel('chat.{conversationId}', function ($user, $conversationId) {
         ->where('user_id', $user->id)
         ->exists();
 });
+
+// Authorize the private notification channel Laravel uses for all
+// ShouldBroadcast notifications (BroadcastNotificationCreated event).
+// Format: App.Models.User.{userId}
+// A user can only subscribe to their own channel.
+Broadcast::channel('App.Models.User.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});
+
