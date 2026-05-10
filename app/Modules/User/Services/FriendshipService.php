@@ -8,6 +8,8 @@ use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\Notification;
 use App\Modules\User\Notifications\FriendRequestNoti;
+use App\Modules\User\Notifications\FriendAcceptedNoti;
+use App\Modules\User\Notifications\FriendDeclinedNoti;
 
 class FriendshipService
 {
@@ -93,17 +95,48 @@ class FriendshipService
         $friendship->update([
             'status' => FriendshipStatus::ACCEPTED
         ]);
+
+        // Notify the original sender in real-time so their FriendshipButton
+        // immediately transitions from "Đã gửi lời mời" → "Bạn bè".
+        $originalSender = User::find($senderId);
+        if ($originalSender) {
+            Notification::send($originalSender, new FriendAcceptedNoti($receiver));
+        }
     }
 
     public function cancelOrDeclineRequest(int $userId1, int $userId2)
     {
-        Friendship::where(function ($query) use ($userId1, $userId2) {
+        // Fetch the record BEFORE deleting so we know which direction the
+        // request was sent — this tells us who the "other party" is to notify.
+        $friendship = Friendship::where(function ($query) use ($userId1, $userId2) {
             $query->where(function($q) use ($userId1, $userId2) {
                 $q->where('user_id', $userId1)->where('friend_id', $userId2);
             })->orWhere(function($q) use ($userId1, $userId2) {
                 $q->where('user_id', $userId2)->where('friend_id', $userId1);
             });
-        })->where('status', FriendshipStatus::PENDING)->delete();
+        })->where('status', FriendshipStatus::PENDING)->first();
+
+        if (!$friendship) {
+            return; // Already gone — nothing to do.
+        }
+
+        $friendship->delete();
+
+        // Determine who performed the action (userId1) and who needs notifying.
+        // The "other party" is whoever is NOT userId1 in the friendship row.
+        $actionUserId  = $userId1;
+        $targetUserId  = ($friendship->user_id === $userId1)
+            ? $friendship->friend_id
+            : $friendship->user_id;
+
+        $actionUser = User::find($actionUserId);
+        $targetUser = User::find($targetUserId);
+
+        if ($actionUser && $targetUser) {
+            // Broadcast a silent real-time blip so the other party's
+            // FriendshipButton snaps back to "Thêm bạn" instantly.
+            Notification::send($targetUser, new FriendDeclinedNoti($actionUser));
+        }
     }
 
     public function unfriend(int $userId1, int $userId2)
