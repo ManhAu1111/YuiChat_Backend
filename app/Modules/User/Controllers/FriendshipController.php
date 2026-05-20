@@ -33,6 +33,24 @@ class FriendshipController extends Controller
         ]);
     }
 
+    /**
+     * Get the full user details of accepted friends.
+     */
+    public function friends(Request $request)
+    {
+        $user = $request->user();
+        $friendIds = $this->friendshipService->getFriendshipStates($user)['accepted'];
+        
+        $friends = \App\Models\User::whereIn('id', $friendIds)
+            ->select('id', 'name', 'username', 'avatar', 'is_online', 'last_active_at')
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $friends
+        ]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
