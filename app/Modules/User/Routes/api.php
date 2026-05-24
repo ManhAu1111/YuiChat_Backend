@@ -5,11 +5,14 @@ use Illuminate\Support\Facades\Route;
 use App\Modules\User\Controllers\UserController;
 use App\Modules\User\Controllers\NotificationController;
 use App\Modules\User\Controllers\FriendshipController;
+use App\Modules\User\Controllers\DeviceController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    Route::post('/heartbeat', [DeviceController::class, 'heartbeat']);
 
     Route::get('/search', [UserController::class, 'search']);
     Route::get('/friendship-states', [FriendshipController::class, 'index']);

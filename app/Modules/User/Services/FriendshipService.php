@@ -96,6 +96,12 @@ class FriendshipService
             'status' => FriendshipStatus::ACCEPTED
         ]);
 
+        // Delete the database notification for this friend request on the receiver's end
+        $receiver->notifications()
+            ->where('type', 'App\\Modules\\User\\Notifications\\FriendRequestNoti')
+            ->where('data->sender_id', $senderId)
+            ->delete();
+
         // Notify the original sender in real-time so their FriendshipButton
         // immediately transitions from "Đã gửi lời mời" → "Bạn bè".
         $originalSender = User::find($senderId);
@@ -118,6 +124,15 @@ class FriendshipService
 
         if (!$friendship) {
             return; // Already gone — nothing to do.
+        }
+
+        // Delete the database notification for this friend request on the receiver's end
+        $receiver = User::find($friendship->friend_id);
+        if ($receiver) {
+            $receiver->notifications()
+                ->where('type', 'App\\Modules\\User\\Notifications\\FriendRequestNoti')
+                ->where('data->sender_id', $friendship->user_id)
+                ->delete();
         }
 
         $friendship->delete();

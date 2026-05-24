@@ -4,11 +4,11 @@ namespace App\Modules\User\Notifications;
 
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 
-class FriendDeclinedNoti extends Notification implements ShouldBroadcast
+class FriendDeclinedNoti extends Notification implements ShouldBroadcastNow
 {
     use Queueable;
 
@@ -23,13 +23,39 @@ class FriendDeclinedNoti extends Notification implements ShouldBroadcast
     }
 
     /**
-     * Broadcast only — no database record needed for a silent UI blip.
+     * Broadcast and database.
      *
      * @return array<int, string>
      */
     public function via(object $notifiable): array
     {
-        return ['broadcast'];
+        return ['database', 'broadcast'];
+    }
+
+    /**
+     * Persisted notification payload (database channel).
+     */
+    public function toDatabase(object $notifiable): array
+    {
+        return [
+            'sender_id' => $this->decliner->id,
+            'sender_name' => $this->decliner->name ?? null,
+            'avatar' => $this->decliner->avatar ?? null,
+            'message' => ($this->decliner->name ?? 'Someone') . ' declined your friend request.',
+        ];
+    }
+
+    /**
+     * Fallback representation.
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'sender_id' => $this->decliner->id,
+            'sender_name' => $this->decliner->name ?? null,
+            'avatar' => $this->decliner->avatar ?? null,
+            'message' => ($this->decliner->name ?? 'Someone') . ' declined your friend request.',
+        ];
     }
 
     /**
@@ -39,8 +65,11 @@ class FriendDeclinedNoti extends Notification implements ShouldBroadcast
      */
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
-        return new BroadcastMessage([
+        return (new BroadcastMessage([
             'sender_id' => $this->decliner->id,
-        ]);
+            'sender_name' => $this->decliner->name ?? null,
+            'avatar' => $this->decliner->avatar ?? null,
+            'message' => ($this->decliner->name ?? 'Someone') . ' declined your friend request.',
+        ]))->onConnection('sync');
     }
 }

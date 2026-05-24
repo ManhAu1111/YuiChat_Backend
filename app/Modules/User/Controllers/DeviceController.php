@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Modules\User\Controllers;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+
 use App\Models\UserDevice;
 use App\Events\UserOnlineStatusChanged;
 
@@ -13,7 +15,9 @@ class DeviceController extends Controller
         $request->validate([
             'device_id' => 'required|string',
         ]);
+
         $user = $request->user();
+
         // Cập nhật hoặc tạo thiết bị
         UserDevice::updateOrCreate(
             [
@@ -24,14 +28,18 @@ class DeviceController extends Controller
                 'last_active_at' => now(),
             ]
         );
+
         $wasOffline = !$user->is_online;
+
         // Cập nhật trạng thái user
         $user->is_online = true;
         $user->last_active_at = now();
         $user->save();
+
         if ($wasOffline) {
             broadcast(new UserOnlineStatusChanged($user->id, true, $user->last_active_at));
         }
+
         return response()->json(['success' => true]);
     }
 }

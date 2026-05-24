@@ -4,11 +4,11 @@ namespace App\Modules\User\Notifications;
 
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 
-class FriendAcceptedNoti extends Notification implements ShouldBroadcast
+class FriendAcceptedNoti extends Notification implements ShouldBroadcastNow
 {
     use Queueable;
 
@@ -49,14 +49,29 @@ class FriendAcceptedNoti extends Notification implements ShouldBroadcast
     }
 
     /**
+     * Fallback representation.
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'sender_id' => $this->acceptor->id,
+            'sender_name' => $this->acceptor->name ?? null,
+            'avatar' => $this->acceptor->avatar ?? null,
+            'message' => ($this->acceptor->name ?? 'Someone') . ' accepted your friend request.',
+        ];
+    }
+
+    /**
      * Real-time broadcast payload (broadcast channel).
      * The frontend listens for type.endsWith('FriendAcceptedNoti').
      */
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
-        return new BroadcastMessage([
+        return (new BroadcastMessage([
             'sender_id' => $this->acceptor->id,
+            'sender_name' => $this->acceptor->name ?? null,
+            'avatar' => $this->acceptor->avatar ?? null,
             'message'   => ($this->acceptor->name ?? 'Someone') . ' accepted your friend request.',
-        ]);
+        ]))->onConnection('sync');
     }
 }

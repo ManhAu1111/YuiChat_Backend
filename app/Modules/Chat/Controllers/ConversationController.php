@@ -120,9 +120,20 @@ class ConversationController extends Controller
                 ]);
             }
 
-            return response()->json($conversation->load(['participants.user' => function ($q) {
+            $loadedConversation = $conversation->load(['participants.user' => function ($q) {
                 $q->select('id', 'name', 'username', 'avatar', 'is_online', 'last_active_at');
-            }]));
+            }]);
+
+            $adder = auth()->user();
+            foreach ($userIds as $id) {
+                $user = \App\Models\User::find($id);
+                if ($user) {
+                    $user->notify(new \App\Modules\Chat\Notifications\GroupAddedNoti($adder, $loadedConversation));
+                    broadcast(new \App\Events\AddedToGroup($loadedConversation, $id))->toOthers();
+                }
+            }
+
+            return response()->json($loadedConversation);
         });
     }
 
@@ -150,7 +161,7 @@ class ConversationController extends Controller
         }
 
         return DB::transaction(function () use ($conversation, $request) {
-            $added = 0;
+            $newlyAddedIds = [];
             foreach ($request->user_ids as $userId) {
                 $exists = Participant::where('conversation_id', $conversation->id)
                     ->where('user_id', $userId)
@@ -162,14 +173,25 @@ class ConversationController extends Controller
                         'user_id' => $userId,
                         'role' => 'member',
                     ]);
-                    $added++;
+                    $newlyAddedIds[] = $userId;
                 }
             }
             
             // Reload with participants
-            return response()->json($conversation->load(['participants.user' => function ($q) {
+            $loadedConversation = $conversation->load(['participants.user' => function ($q) {
                 $q->select('id', 'name', 'username', 'avatar', 'is_online', 'last_active_at');
-            }]));
+            }]);
+
+            $adder = auth()->user();
+            foreach ($newlyAddedIds as $id) {
+                $user = \App\Models\User::find($id);
+                if ($user) {
+                    $user->notify(new \App\Modules\Chat\Notifications\GroupAddedNoti($adder, $loadedConversation));
+                    broadcast(new \App\Events\AddedToGroup($loadedConversation, $id))->toOthers();
+                }
+            }
+
+            return response()->json($loadedConversation);
         });
     }
 

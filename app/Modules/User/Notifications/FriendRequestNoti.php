@@ -6,8 +6,10 @@ use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 
-class FriendRequestNoti extends Notification
+class FriendRequestNoti extends Notification implements ShouldBroadcastNow
 {
     use Queueable;
 
@@ -30,7 +32,7 @@ class FriendRequestNoti extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     /**
@@ -46,5 +48,18 @@ class FriendRequestNoti extends Notification
             'avatar' => $this->sender->avatar ?? null,
             'note' => $this->note,
         ];
+    }
+
+    /**
+     * Get the broadcast representation of the notification.
+     */
+    public function toBroadcast(object $notifiable): BroadcastMessage
+    {
+        return (new BroadcastMessage([
+            'sender_id' => $this->sender->id ?? null,
+            'sender_name' => $this->sender->name ?? null,
+            'avatar' => $this->sender->avatar ?? null,
+            'note' => $this->note,
+        ]))->onConnection('sync');
     }
 }

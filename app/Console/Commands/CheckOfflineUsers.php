@@ -30,7 +30,6 @@ class CheckOfflineUsers extends Command
         $offlineUsers = User::where('is_online', true)
             ->where('last_active_at', '<', now()->subMinutes(1))
             ->get();
-
         foreach ($offlineUsers as $user) {
             $user->is_online = false;
             $user->save();
