@@ -1,11 +1,16 @@
 <?php
-
-use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Schedule;
+use App\Models\User;
+use App\Modules\Chat\Notifications\GroupAddedNoti;
+use App\Models\Conversation;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote')->hourly();
-
-Schedule::command('app:check-offline-users')->everyMinute();
+Artisan::command('test:broadcast', function () {
+    $user = User::first();
+    $conversation = Conversation::first();
+    if ($user && $conversation) {
+        $user->notify(new GroupAddedNoti($user, $conversation));
+        $this->info("Notification sent to user {$user->id}");
+    } else {
+        $this->error("No user or conversation found");
+    }
+});
