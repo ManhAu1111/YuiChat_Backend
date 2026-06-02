@@ -42,10 +42,17 @@ class MessageController extends Controller
             'file_name'      => ['nullable', 'string', 'max:255'],
             'file_type'      => ['nullable', 'string', 'max:100'],
             'file_size'      => ['nullable', 'integer', 'min:0'],
+            'attachments'    => ['nullable', 'array'],
+            'attachments.*.file_url'  => ['required', 'string'],
+            'attachments.*.file_name' => ['nullable', 'string', 'max:255'],
+            'attachments.*.file_type' => ['nullable', 'string', 'max:100'],
+            'attachments.*.file_size' => ['nullable', 'integer', 'min:0'],
         ]);
 
+        $hasAttachments = !empty($validated['attachments']) || !empty($validated['attachment_url']);
+
         // Cần có ít nhất content hoặc attachment
-        if (empty($validated['content']) && empty($validated['attachment_url'])) {
+        if (empty($validated['content']) && !$hasAttachments) {
             return response()->json(['message' => 'Tin nhắn phải có nội dung hoặc file đính kèm.'], 422);
         }
 
@@ -60,20 +67,34 @@ class MessageController extends Controller
         }
 
         return DB::transaction(function () use ($conversationId, $authUserId, $validated) {
+            $attachmentsData = $validated['attachments'] ?? [];
+            if (empty($attachmentsData) && !empty($validated['attachment_url'])) {
+                $attachmentsData[] = [
+                    'file_url'  => $validated['attachment_url'],
+                    'file_name' => $validated['file_name'] ?? null,
+                    'file_type' => $validated['file_type'] ?? null,
+                    'file_size' => $validated['file_size'] ?? null,
+                ];
+            }
+
             // Xác định type: nếu không truyền lên thì suy ra từ attachment
             $type = $validated['type'] ?? 'text';
-            if ($type === 'text' && !empty($validated['attachment_url'])) {
-                $type = str_starts_with($validated['file_type'] ?? '', 'image/') ? 'image' : 'file';
+            if ($type === 'text' && !empty($attachmentsData)) {
+                $type = str_starts_with($attachmentsData[0]['file_type'] ?? '', 'image/') ? 'image' : 'file';
             }
 
             // Lưu metadata file vào cột metadata của message
             $metadata = null;
-            if (!empty($validated['attachment_url'])) {
-                $metadata = [
-                    'file_name' => $validated['file_name'] ?? null,
-                    'file_size' => $validated['file_size'] ?? null,
-                    'file_type' => $validated['file_type'] ?? null,
-                ];
+            if (!empty($attachmentsData)) {
+                if (count($attachmentsData) === 1) {
+                    $metadata = [
+                        'file_name' => $attachmentsData[0]['file_name'] ?? null,
+                        'file_size' => $attachmentsData[0]['file_size'] ?? null,
+                        'file_type' => $attachmentsData[0]['file_type'] ?? null,
+                    ];
+                } else {
+                    $metadata = ['file_count' => count($attachmentsData)];
+                }
             }
 
             $message = Message::create([
@@ -85,13 +106,13 @@ class MessageController extends Controller
             ]);
 
             // Tạo record Attachment nếu có file đính kèm
-            if (!empty($validated['attachment_url'])) {
+            foreach ($attachmentsData as $att) {
                 Attachment::create([
-                    'message_id' => $message->id,
-                    'file_url'   => $validated['attachment_url'],
-                    'file_type'  => $validated['file_type'] ?? 'application/octet-stream',
-                    'file_name'  => $validated['file_name'] ?? null,
-                    'file_size'  => $validated['file_size'] ?? null,
+                    'message_id'  => $message->id,
+                    'file_url'    => $att['file_url'],
+                    'file_type'   => $att['file_type'] ?? 'application/octet-stream',
+                    'file_name'   => $att['file_name'] ?? null,
+                    'file_size'   => $att['file_size'] ?? null,
                     'source_type' => 0,
                 ]);
             }
