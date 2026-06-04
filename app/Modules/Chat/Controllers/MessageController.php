@@ -3,13 +3,11 @@
 namespace App\Modules\Chat\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Attachment;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Events\MessageSent;
 use App\Models\Participant;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class MessageController extends Controller
 {
@@ -25,10 +23,13 @@ class MessageController extends Controller
             return response()->json(['message' => 'Unauthorized access to this conversation.'], 403);
         }
 
-        $messages = Message::where('conversation_id', $conversationId)
-            ->with(['sender:id,name,username,avatar', 'attachments'])
-            ->orderBy('created_at', 'asc')
+        $messages = Message::where('conversation_id', (int) $conversationId)
+            ->with(['sender:id,name,username,avatar'])
+            ->orderBy('created_at', 'desc')
             ->paginate(50);
+
+        // Reverse to ascending for the frontend
+        $messages->setCollection($messages->getCollection()->reverse()->values());
 
         return response()->json($messages);
     }
@@ -66,68 +67,56 @@ class MessageController extends Controller
             return response()->json(['message' => 'Action unauthorized.'], 403);
         }
 
-        return DB::transaction(function () use ($conversationId, $authUserId, $validated) {
-            $attachmentsData = $validated['attachments'] ?? [];
-            if (empty($attachmentsData) && !empty($validated['attachment_url'])) {
-                $attachmentsData[] = [
-                    'file_url'  => $validated['attachment_url'],
-                    'file_name' => $validated['file_name'] ?? null,
-                    'file_type' => $validated['file_type'] ?? null,
-                    'file_size' => $validated['file_size'] ?? null,
+        $attachmentsData = $validated['attachments'] ?? [];
+        if (empty($attachmentsData) && !empty($validated['attachment_url'])) {
+            $attachmentsData[] = [
+                'file_url'  => $validated['attachment_url'],
+                'file_name' => $validated['file_name'] ?? null,
+                'file_type' => $validated['file_type'] ?? null,
+                'file_size' => $validated['file_size'] ?? null,
+            ];
+        }
+
+        // Xác định type: nếu không truyền lên thì suy ra từ attachment
+        $type = $validated['type'] ?? 'text';
+        if ($type === 'text' && !empty($attachmentsData)) {
+            $type = str_starts_with($attachmentsData[0]['file_type'] ?? '', 'image/') ? 'image' : 'file';
+        }
+
+        // Lưu metadata file vào cột metadata của message
+        $metadata = null;
+        if (!empty($attachmentsData)) {
+            if (count($attachmentsData) === 1) {
+                $metadata = [
+                    'file_name' => $attachmentsData[0]['file_name'] ?? null,
+                    'file_size' => $attachmentsData[0]['file_size'] ?? null,
+                    'file_type' => $attachmentsData[0]['file_type'] ?? null,
                 ];
+            } else {
+                $metadata = ['file_count' => count($attachmentsData)];
             }
+        }
 
-            // Xác định type: nếu không truyền lên thì suy ra từ attachment
-            $type = $validated['type'] ?? 'text';
-            if ($type === 'text' && !empty($attachmentsData)) {
-                $type = str_starts_with($attachmentsData[0]['file_type'] ?? '', 'image/') ? 'image' : 'file';
-            }
+        $message = Message::create([
+            'conversation_id' => (int) $conversationId,
+            'sender_id'       => (int) $authUserId,
+            'content'         => $validated['content'] ?? null,
+            'type'            => $type,
+            'metadata'        => $metadata,
+            'attachments'     => $attachmentsData, // Embedded attachments
+            'reactions'       => [], // Empty array for future reactions
+        ]);
 
-            // Lưu metadata file vào cột metadata của message
-            $metadata = null;
-            if (!empty($attachmentsData)) {
-                if (count($attachmentsData) === 1) {
-                    $metadata = [
-                        'file_name' => $attachmentsData[0]['file_name'] ?? null,
-                        'file_size' => $attachmentsData[0]['file_size'] ?? null,
-                        'file_type' => $attachmentsData[0]['file_type'] ?? null,
-                    ];
-                } else {
-                    $metadata = ['file_count' => count($attachmentsData)];
-                }
-            }
+        // Cập nhật last_message_id của cuộc hội thoại (MariaDB)
+        Conversation::where('id', $conversationId)->update([
+            'last_message_id' => $message->_id ?? $message->id,
+            'updated_at'      => now(),
+        ]);
 
-            $message = Message::create([
-                'conversation_id' => $conversationId,
-                'sender_id'       => $authUserId,
-                'content'         => $validated['content'] ?? null,
-                'type'            => $type,
-                'metadata'        => $metadata,
-            ]);
+        $messageWithRelations = $message->load(['sender:id,name,username,avatar']);
 
-            // Tạo record Attachment nếu có file đính kèm
-            foreach ($attachmentsData as $att) {
-                Attachment::create([
-                    'message_id'  => $message->id,
-                    'file_url'    => $att['file_url'],
-                    'file_type'   => $att['file_type'] ?? 'application/octet-stream',
-                    'file_name'   => $att['file_name'] ?? null,
-                    'file_size'   => $att['file_size'] ?? null,
-                    'source_type' => 0,
-                ]);
-            }
+        broadcast(new MessageSent($messageWithRelations))->toOthers();
 
-            // Cập nhật last_message_id của cuộc hội thoại
-            Conversation::where('id', $conversationId)->update([
-                'last_message_id' => $message->id,
-                'updated_at'      => now(),
-            ]);
-
-            $messageWithRelations = $message->load(['sender:id,name,username,avatar', 'attachments']);
-
-            broadcast(new MessageSent($messageWithRelations))->toOthers();
-
-            return response()->json($messageWithRelations, 201);
-        });
+        return response()->json($messageWithRelations, 201);
     }
 }

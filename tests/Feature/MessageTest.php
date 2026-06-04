@@ -15,6 +15,13 @@ class MessageTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Truncate MongoDB collections used in tests since RefreshDatabase only resets SQL
+        Message::truncate();
+    }
+
     public function test_user_can_fetch_messages()
     {
         $user1 = User::factory()->create();
@@ -28,7 +35,8 @@ class MessageTest extends TestCase
             'conversation_id' => $conversation->id,
             'sender_id' => $user2->id,
             'content' => 'Hello there',
-            'type' => 'text'
+            'type' => 'text',
+            'attachments' => []
         ]);
 
         $response = $this->actingAs($user1)->getJson("/api/conversations/{$conversation->id}/messages");
@@ -76,7 +84,7 @@ class MessageTest extends TestCase
             'conversation_id' => $conversation->id,
             'sender_id' => $user1->id,
             'content' => 'This is a test message'
-        ]);
+        ], 'mongodb');
 
         Event::assertDispatched(MessageSent::class);
     }
@@ -106,12 +114,14 @@ class MessageTest extends TestCase
 
         $response->assertStatus(201);
 
-        $messageId = $response->json('id');
-
-        $this->assertDatabaseHas('attachments', [
-            'message_id' => $messageId,
-            'file_url' => 'http://example.com/photo.jpg'
-        ]);
+        $messageId = $response->json('message._id') ?? $response->json('_id') ?? $response->json('id');
+        
+        // Assert in MongoDB
+        $message = Message::find($messageId);
+        $this->assertNotNull($message, "Message not found in MongoDB");
+        $this->assertIsArray($message->attachments);
+        $this->assertCount(1, $message->attachments);
+        $this->assertEquals('http://example.com/photo.jpg', $message->attachments[0]['file_url']);
     }
 
     public function test_user_cannot_send_empty_message()
