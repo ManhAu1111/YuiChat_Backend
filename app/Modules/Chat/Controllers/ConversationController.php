@@ -279,4 +279,46 @@ class ConversationController extends Controller
             $q->select('id', 'name', 'username', 'avatar', 'is_online', 'last_active_at');
         }]));
     }
+
+    public function markAsDelivered(Request $request, $id)
+    {
+        $request->validate([
+            'message_id' => ['required', 'string'],
+        ]);
+
+        $authUserId = auth()->id();
+        $participant = Participant::where('conversation_id', $id)
+            ->where('user_id', $authUserId)
+            ->firstOrFail();
+
+        $participant->update([
+            'last_delivered_message_id' => $request->message_id,
+        ]);
+
+        broadcast(new \App\Events\MessageDelivered($id, $request->message_id, $authUserId))->toOthers();
+
+        return response()->json(['message' => 'Marked as delivered']);
+    }
+
+    public function markAsRead(Request $request, $id)
+    {
+        $request->validate([
+            'message_id' => ['required', 'string'],
+        ]);
+
+        $authUserId = auth()->id();
+        $participant = Participant::where('conversation_id', $id)
+            ->where('user_id', $authUserId)
+            ->firstOrFail();
+
+        $participant->update([
+            'last_read_message_id' => $request->message_id,
+            // If they read it, they implicitly delivered it too
+            'last_delivered_message_id' => $request->message_id,
+        ]);
+
+        broadcast(new \App\Events\MessageRead($id, $request->message_id, $authUserId))->toOthers();
+
+        return response()->json(['message' => 'Marked as read']);
+    }
 }

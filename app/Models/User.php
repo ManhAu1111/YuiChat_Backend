@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use MongoDB\Laravel\Eloquent\HybridRelations;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Sanctum\HasApiTokens;
@@ -16,7 +17,14 @@ use App\Models\Conversation;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HybridRelations;
+
+    // Override getConnectionName to ensure it always uses the default SQL connection (mariadb/sqlite)
+    // instead of inheriting the mongodb connection from HybridRelations when queried via Message
+    public function getConnectionName()
+    {
+        return config('database.default');
+    }
 
     /**
      * The attributes that are mass assignable.
