@@ -26,4 +26,56 @@ class UserController extends Controller
 
         return response()->json($users);
     }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username,' . $user->id,
+            'avatar' => 'nullable|string',
+        ]);
+
+        $user->update($validated);
+
+        return response()->json($user);
+    }
+
+    public function show(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $currentUser = $request->user();
+
+        // Check if the current user is the target user
+        $isSelf = $currentUser->id === $user->id;
+
+        // Check if they are friends
+        $isFriend = false;
+        if (!$isSelf) {
+            $isFriend = $currentUser->friendships()
+                ->where('friend_id', $user->id)
+                ->where('status', 'accepted')
+                ->exists();
+        }
+
+        // Only load activeStatus if they are friends or it's the user themselves
+        if ($isSelf || $isFriend) {
+            $user->load('activeStatus');
+        }
+
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'username' => $user->username,
+            'email' => $user->email, // Optional, might want to hide email of non-friends for privacy, but we'll return it for now.
+            'avatar' => $user->avatar,
+            'is_online' => $user->is_online,
+            'status' => $user->activeStatus ? [
+                'id' => $user->activeStatus->id,
+                'content' => $user->activeStatus->content,
+                'icon' => $user->activeStatus->icon,
+            ] : null,
+        ]);
+    }
 }

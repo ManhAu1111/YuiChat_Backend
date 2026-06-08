@@ -5,6 +5,8 @@ namespace App\Modules\User\Services;
 use App\Models\Friendship;
 use App\Enums\FriendshipStatus;
 use App\Models\User;
+use App\Models\Conversation;
+use App\Models\Participant;
 use Exception;
 use Illuminate\Support\Facades\Notification;
 use App\Modules\User\Notifications\FriendRequestNoti;
@@ -95,6 +97,37 @@ class FriendshipService
         $friendship->update([
             'status' => FriendshipStatus::ACCEPTED
         ]);
+
+        // Automatically create a 1on1 conversation if it doesn't exist
+        $conversation = Conversation::where('is_group', false)
+            ->whereHas('participants', function ($q) use ($receiver) {
+                $q->where('user_id', $receiver->id);
+            })
+            ->whereHas('participants', function ($q) use ($senderId) {
+                $q->where('user_id', $senderId);
+            })
+            ->first();
+
+        if (!$conversation) {
+            $conversation = Conversation::create([
+                'is_group' => false,
+            ]);
+
+            Participant::create([
+                'conversation_id' => $conversation->id,
+                'user_id' => $receiver->id,
+                'role' => 'member',
+            ]);
+
+            Participant::create([
+                'conversation_id' => $conversation->id,
+                'user_id' => $senderId,
+                'role' => 'member',
+            ]);
+        } else {
+            // Touch to update updated_at so it jumps to the top of the chat list
+            $conversation->touch();
+        }
 
         // Delete the database notification for this friend request on the receiver's end
         $receiver->notifications()
