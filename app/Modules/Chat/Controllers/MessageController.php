@@ -119,4 +119,131 @@ class MessageController extends Controller
 
         return response()->json($messageWithRelations, 201);
     }
+
+    public function forwardMessages(Request $request)
+    {
+        $validated = $request->validate([
+            'target_conversation_ids'   => ['required', 'array', 'min:1'],
+            'target_conversation_ids.*' => ['integer'],
+            'message_ids'               => ['nullable', 'array'],
+            'message_ids.*'             => ['string'],
+            'attachments'               => ['nullable', 'array'],
+            'attachments.*.file_url'    => ['required', 'string'],
+            'attachments.*.file_name'   => ['nullable', 'string', 'max:255'],
+            'attachments.*.file_type'   => ['nullable', 'string', 'max:100'],
+            'attachments.*.file_size'   => ['nullable', 'integer', 'min:0'],
+            'additional_text'           => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $authUserId = auth()->id();
+        $targetIds = $validated['target_conversation_ids'];
+
+        // Verify the user is a participant in all target conversations
+        $validConversationsCount = Participant::whereIn('conversation_id', $targetIds)
+            ->where('user_id', $authUserId)
+            ->count();
+
+        if ($validConversationsCount !== count($targetIds)) {
+            return response()->json(['message' => 'Unauthorized access to some conversations.'], 403);
+        }
+
+        // Fetch original messages if message_ids are provided
+        $originalMessages = collect();
+        if (!empty($validated['message_ids'])) {
+            $originalMessages = Message::whereIn('_id', $validated['message_ids'])->get();
+        }
+
+        $newMessagesCount = 0;
+        $createdMessages = [];
+        
+        foreach ($targetIds as $conversationId) {
+            $lastMsg = null;
+
+            // 1. Forward original messages
+            foreach ($originalMessages as $origMsg) {
+                $metadata = $origMsg->metadata ?? [];
+                $metadata['is_forwarded'] = true;
+
+                $lastMsg = Message::create([
+                    'conversation_id' => (int) $conversationId,
+                    'sender_id'       => (int) $authUserId,
+                    'content'         => $origMsg->content,
+                    'type'            => $origMsg->type,
+                    'metadata'        => $metadata,
+                    'attachments'     => $origMsg->attachments,
+                    'reactions'       => [],
+                ]);
+                $newMessagesCount++;
+                
+                $msgWithRelations = $lastMsg->load(['sender:id,name,username,avatar']);
+                $createdMessages[] = $msgWithRelations;
+                broadcast(new MessageSent($msgWithRelations))->toOthers();
+            }
+
+            // 2. Forward specific attachments (if provided instead of/along with whole messages)
+            if (!empty($validated['attachments'])) {
+                $attachmentsData = $validated['attachments'];
+                $type = str_starts_with($attachmentsData[0]['file_type'] ?? '', 'image/') ? 'image' : 'file';
+                
+                $metadata = null;
+                if (count($attachmentsData) === 1) {
+                    $metadata = [
+                        'file_name' => $attachmentsData[0]['file_name'] ?? null,
+                        'file_size' => $attachmentsData[0]['file_size'] ?? null,
+                        'file_type' => $attachmentsData[0]['file_type'] ?? null,
+                    ];
+                } else {
+                    $metadata = ['file_count' => count($attachmentsData)];
+                }
+                $metadata['is_forwarded'] = true;
+
+                $lastMsg = Message::create([
+                    'conversation_id' => (int) $conversationId,
+                    'sender_id'       => (int) $authUserId,
+                    'content'         => null,
+                    'type'            => $type,
+                    'metadata'        => $metadata,
+                    'attachments'     => $attachmentsData,
+                    'reactions'       => [],
+                ]);
+                $newMessagesCount++;
+                
+                $msgWithRelations = $lastMsg->load(['sender:id,name,username,avatar']);
+                $createdMessages[] = $msgWithRelations;
+                broadcast(new MessageSent($msgWithRelations))->toOthers();
+            }
+
+            // 3. Send additional text if provided
+            if (!empty($validated['additional_text'])) {
+                $lastMsg = Message::create([
+                    'conversation_id' => (int) $conversationId,
+                    'sender_id'       => (int) $authUserId,
+                    'content'         => $validated['additional_text'],
+                    'type'            => 'text',
+                    'metadata'        => null,
+                    'attachments'     => [],
+                    'reactions'       => [],
+                ]);
+                $newMessagesCount++;
+                
+                $msgWithRelations = $lastMsg->load(['sender:id,name,username,avatar']);
+                $createdMessages[] = $msgWithRelations;
+                broadcast(new MessageSent($msgWithRelations))->toOthers();
+            }
+
+            // Update conversation last_message_id
+            if ($lastMsg) {
+                Conversation::where('id', $conversationId)->update([
+                    'last_message_id' => $lastMsg->_id ?? $lastMsg->id,
+                    'updated_at'      => now(),
+                ]);
+            }
+        }
+
+        return response()->json([
+            'message' => 'Successfully forwarded messages.',
+            'count' => $newMessagesCount,
+            'messages' => $createdMessages
+        ], 200);
+    }
 }

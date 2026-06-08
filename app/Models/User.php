@@ -92,4 +92,14 @@ class User extends Authenticatable
         return $this->belongsToMany(Conversation::class, 'participants')
             ->withPivot(['role', 'last_read_message_id']);
     }
+
+    public function activeStatus()
+    {
+        return $this->hasOne(UserStatus::class)
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                      ->orWhere('expires_at', '>', now());
+            })
+            ->latest('created_at');
+    }
 }
