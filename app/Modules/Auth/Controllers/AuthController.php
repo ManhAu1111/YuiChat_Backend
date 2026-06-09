@@ -7,17 +7,64 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\RegisterOtpMail;
 
 class AuthController extends Controller
 {
+    public function sendOtp(Request $request)
+    {
+        $request->validate([
+            'username' => ['required', 'string', 'max:255', 'unique:users,username'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $otp = sprintf('%06d', mt_rand(0, 999999));
+        
+        Cache::put("otp_register_{$request->email}", $otp, now()->addMinutes(10));
+        
+        Mail::to($request->email)->send(new RegisterOtpMail($otp));
+
+        return response()->json(['message' => 'Mã OTP đã được gửi.']);
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+            'otp' => ['required', 'string', 'size:6'],
+        ]);
+
+        $cachedOtp = Cache::get("otp_register_{$request->email}");
+
+        if (! $cachedOtp || $cachedOtp !== $request->otp) {
+            throw ValidationException::withMessages([
+                'otp' => ['Mã OTP không đúng hoặc đã hết hạn.'],
+            ]);
+        }
+
+        Cache::put("otp_verified_{$request->email}", true, now()->addMinutes(15));
+        Cache::forget("otp_register_{$request->email}");
+
+        return response()->json(['message' => 'Xác thực OTP thành công.']);
+    }
+
     public function register(Request $request)
     {
         $validated = $request->validate([
             'username' => ['required', 'string', 'max:255', 'unique:users,username'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
             'name' => ['required', 'string', 'max:255'],
         ]);
+
+        if (! Cache::get("otp_verified_{$validated['email']}")) {
+            throw ValidationException::withMessages([
+                'email' => ['Email chưa được xác thực OTP.'],
+            ]);
+        }
 
         $user = User::create([
             'username' => $validated['username'],
@@ -25,6 +72,8 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
             'name' => $validated['name'],
         ]);
+
+        Cache::forget("otp_verified_{$validated['email']}");
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
