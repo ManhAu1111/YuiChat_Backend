@@ -16,15 +16,20 @@ class StatusController extends Controller
     {
         $user = Auth::user();
 
-        // Get friends
-        $friends = $user->friendships()
+        // Get friends where user is either sender or receiver
+        $friendships = \App\Models\Friendship::with(['user', 'friend'])
+            ->where(function($query) use ($user) {
+                $query->where('user_id', $user->id)
+                      ->orWhere('friend_id', $user->id);
+            })
             ->where('status', 'accepted')
-            ->get()
-            ->map(function ($friendship) use ($user) {
-                return $friendship->user_id === $user->id 
-                    ? $friendship->friend 
-                    : $friendship->user;
-            });
+            ->get();
+
+        $friends = $friendships->map(function ($friendship) use ($user) {
+            return $friendship->user_id === $user->id 
+                ? $friendship->friend 
+                : $friendship->user;
+        })->filter()->values(); // filter out nulls and re-index
 
         // Add the current user to the list
         $friends->push($user);
@@ -74,6 +79,12 @@ class StatusController extends Controller
                 'expires_at' => now()->addHours(24),
             ]
         );
+
+        broadcast(new \App\Events\UserMoodStatusChanged($user->id, [
+            'id' => $status->id,
+            'content' => $status->content,
+            'icon' => $status->icon,
+        ]));
 
         return response()->json([
             'success' => true,
