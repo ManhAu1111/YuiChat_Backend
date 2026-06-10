@@ -20,7 +20,7 @@ class ConversationController extends Controller
             ->with([
                 'lastMessage',
                 'participants.user' => function ($q) {
-                    $q->select('id', 'name', 'username', 'avatar', 'is_online', 'last_active_at');
+                    $q->select('id', 'name', 'username', 'avatar', 'is_online', 'last_active_at')->with('activeStatus');
                 }
             ])
             ->orderByDesc('updated_at')
@@ -121,7 +121,7 @@ class ConversationController extends Controller
             }
 
             $loadedConversation = $conversation->load(['participants.user' => function ($q) {
-                $q->select('id', 'name', 'username', 'avatar', 'is_online', 'last_active_at');
+                $q->select('id', 'name', 'username', 'avatar', 'is_online', 'last_active_at')->with('activeStatus');
             }]);
 
             $adder = auth()->user();
@@ -179,7 +179,7 @@ class ConversationController extends Controller
             
             // Reload with participants
             $loadedConversation = $conversation->load(['participants.user' => function ($q) {
-                $q->select('id', 'name', 'username', 'avatar', 'is_online', 'last_active_at');
+                $q->select('id', 'name', 'username', 'avatar', 'is_online', 'last_active_at')->with('activeStatus');
             }]);
 
             $adder = auth()->user();
@@ -276,7 +276,7 @@ class ConversationController extends Controller
         }
 
         return response()->json($conversation->load(['participants.user' => function ($q) {
-            $q->select('id', 'name', 'username', 'avatar', 'is_online', 'last_active_at');
+            $q->select('id', 'name', 'username', 'avatar', 'is_online', 'last_active_at')->with('activeStatus');
         }]));
     }
 
