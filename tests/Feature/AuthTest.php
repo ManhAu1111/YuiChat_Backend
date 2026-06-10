@@ -13,6 +13,8 @@ class AuthTest extends TestCase
 
     public function test_user_can_register()
     {
+        \Illuminate\Support\Facades\Cache::put('otp_verified_test@example.com', true, now()->addMinutes(15));
+
         $response = $this->postJson('/api/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',

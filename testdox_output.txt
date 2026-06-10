@@ -1,0 +1,221 @@
+PHPUnit 10.5.63 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.21
+Configuration: /home/aumanh/Workspace/YuiChat/YuiChat_Backend/phpunit.xml
+
+.F....F..........EEEEE.....                                       27 / 27 (100%)
+
+Time: 00:25.486, Memory: 20.00 MB
+
+Auth (Tests\Feature\Auth)
+ ✘ User can register
+   │
+   │ Expected response status code [201] but received 422.
+   │ Failed asserting that 422 is identical to 201.
+   │
+   │ The following errors occurred during the last request:
+   │
+   │ {
+   │     "message": "Email chưa được xác thực OTP.",
+   │     "errors": {
+   │         "email": [
+   │             "Email chưa được xác thực OTP."
+   │         ]
+   │     }
+   │ }
+   │
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:160
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/tests/Feature/AuthTest.php:24
+   │
+ ✔ Register requires valid data
+ ✔ User can login
+ ✔ Login fails with invalid credentials
+ ✔ User can logout
+
+Conversation (Tests\Feature\Conversation)
+ ✘ User can get conversations
+   │
+   │ Expected response status code [200] but received 500.
+   │ Failed asserting that 500 is identical to 200.
+   │
+   │ The following exception occurred during the last request:
+   │
+   │ MongoDB\Driver\Exception\ConnectionTimeoutException: No suitable servers found (`serverSelectionTryOnce` set): [Failed to resolve 'mongodb']. Topology type: Single in /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/functions.php:600
+   │ Stack trace:
+   │ #0 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/functions.php(600): MongoDB\Driver\Manager->selectServer()
+   │ #1 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/Collection.php(648): MongoDB\select_server()
+   │ #2 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/laravel-mongodb/src/Query/Builder.php(511): MongoDB\Collection->find()
+   │ #3 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/laravel-mongodb/src/Query/Builder.php(247): MongoDB\Laravel\Query\Builder->getFresh()
+   │ #4 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(811): MongoDB\Laravel\Query\Builder->get()
+   │ #5 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(793): Illuminate\Database\Eloquent\Builder->getModels()
+   │ #6 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Relations/Relation.php(213): Illuminate\Database\Eloquent\Builder->get()
+   │ #7 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Relations/Relation.php(176): Illuminate\Database\Eloquent\Relations\Relation->get()
+   │ #8 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(859): Illuminate\Database\Eloquent\Relations\Relation->getEager()
+   │ #9 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(828): Illuminate\Database\Eloquent\Builder->eagerLoadRelation()
+   │ #10 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(794): Illuminate\Database\Eloquent\Builder->eagerLoadRelations()
+   │ #11 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/app/Modules/Chat/Controllers/ConversationController.php(27): Illuminate\Database\Eloquent\Builder->get()
+   │ #12 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(47): App\Modules\Chat\Controllers\ConversationController->index()
+   │ #13 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Routing/Route.php(266): Illuminate\Routing\ControllerDispatcher->dispatch()
+   │ #14 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Routing/Route.php(212): Illuminate\Routing\Route->runController()
+   │ #15 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(808): Illuminate\Routing\Route->run()
+   │ #16 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\Routing\Router->{closure:Illuminate\Routing\Router::runRouteWithinStack():807}()
+   │ #17 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(51): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():168}()
+   │ #18 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\Routing\Middleware\SubstituteBindings->handle()
+   │ #19 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(64): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():184}:185}()
+   │ #20 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\Auth\Middleware\Authenticate->handle()
+   │ #21 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():184}:185}()
+   │ #22 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(807): Illuminate\Pipeline\Pipeline->then()
+   │ #23 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(786): Illuminate\Routing\Router->runRouteWithinStack()
+   │ #24 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(750): Illuminate\Routing\Router->runRoute()
+   │ #25 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Routing/Router.php(739): Illuminate\Routing\Router->dispatchToRoute()
+   │ #26 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(201): Illuminate\Routing\Router->dispatch()
+   │ #27 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\Foundation\Http\Kernel->{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():198}()
+   │ #28 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():168}()
+   │ #29 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+   │ #30 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull->handle()
+   │ #31 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():184}:185}()
+   │ #32 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+   │ #33 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\Foundation\Http\Middleware\TrimStrings->handle()
+   │ #34 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():184}:185}()
+   │ #35 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\Http\Middleware\ValidatePostSize->handle()
+   │ #36 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(110): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():184}:185}()
+   │ #37 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance->handle()
+   │ #38 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(62): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():184}:185}()
+   │ #39 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\Http\Middleware\HandleCors->handle()
+   │ #40 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():184}:185}()
+   │ #41 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\Http\Middleware\TrustProxies->handle()
+   │ #42 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():184}:185}()
+   │ #43 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks->handle()
+   │ #44 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():184}:185}()
+   │ #45 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(176): Illuminate\Pipeline\Pipeline->then()
+   │ #46 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(145): Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter()
+   │ #47 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel->handle()
+   │ #48 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(573): Illuminate\Foundation\Testing\TestCase->call()
+   │ #49 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(381): Illuminate\Foundation\Testing\TestCase->json()
+   │ #50 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/tests/Feature/ConversationTest.php(24): Illuminate\Foundation\Testing\TestCase->getJson()
+   │ #51 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/phpunit/phpunit/src/Framework/TestCase.php(1548): Tests\Feature\ConversationTest->test_user_can_get_conversations()
+   │ #52 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/phpunit/phpunit/src/Framework/TestCase.php(686): PHPUnit\Framework\TestCase->runTest()
+   │ #53 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/phpunit/phpunit/src/Framework/TestRunner.php(106): PHPUnit\Framework\TestCase->runBare()
+   │ #54 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/phpunit/phpunit/src/Framework/TestCase.php(516): PHPUnit\Framework\TestRunner->run()
+   │ #55 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/phpunit/phpunit/src/Framework/TestSuite.php(374): PHPUnit\Framework\TestCase->run()
+   │ #56 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/phpunit/phpunit/src/Framework/TestSuite.php(374): PHPUnit\Framework\TestSuite->run()
+   │ #57 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/phpunit/phpunit/src/Framework/TestSuite.php(374): PHPUnit\Framework\TestSuite->run()
+   │ #58 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(64): PHPUnit\Framework\TestSuite->run()
+   │ #59 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/phpunit/phpunit/src/TextUI/Application.php(204): PHPUnit\TextUI\TestRunner->run()
+   │ #60 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application->run()
+   │ #61 /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/bin/phpunit(122): include('...')
+   │ #62 {main}
+   │
+   │ ----------------------------------------------------------------------------------
+   │
+   │ No suitable servers found (`serverSelectionTryOnce` set): [Failed to resolve 'mongodb']. Topology type: Single
+   │
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:160
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/tests/Feature/ConversationTest.php:26
+   │
+ ✔ User can create 1on1 conversation
+ ✔ User can create group conversation
+ ✔ Admin can add members to group
+ ✔ Non admin cannot add members
+ ✔ Admin can remove member
+ ✔ Member can leave group
+
+Example (Tests\Feature\Example)
+ ✔ The application returns a successful response
+
+Example (Tests\Unit\Example)
+ ✔ That true is true
+
+Friendship (Tests\Feature\Friendship)
+ ✔ User can send friend request
+ ✔ User can accept friend request
+ ✔ User can decline friend request
+
+Message (Tests\Feature\Message)
+ ✘ User can fetch messages
+   │
+   │ MongoDB\Driver\Exception\ConnectionTimeoutException: No suitable servers found (`serverSelectionTryOnce` set): [Failed to resolve 'mongodb']. Topology type: Single
+   │
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/functions.php:600
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/functions.php:667
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/Collection.php:454
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/laravel-mongodb/src/Query/Builder.php:1025
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2123
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2372
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2384
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/tests/Feature/MessageTest.php:22
+   │
+ ✘ User cannot fetch messages of unauthorized conversation
+   │
+   │ MongoDB\Driver\Exception\ConnectionTimeoutException: No suitable servers found (`serverSelectionTryOnce` set): [Failed to resolve 'mongodb']. Topology type: Single
+   │
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/functions.php:600
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/functions.php:667
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/Collection.php:454
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/laravel-mongodb/src/Query/Builder.php:1025
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2123
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2372
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2384
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/tests/Feature/MessageTest.php:22
+   │
+ ✘ User can send text message
+   │
+   │ MongoDB\Driver\Exception\ConnectionTimeoutException: No suitable servers found (`serverSelectionTryOnce` set): [Failed to resolve 'mongodb']. Topology type: Single
+   │
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/functions.php:600
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/functions.php:667
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/Collection.php:454
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/laravel-mongodb/src/Query/Builder.php:1025
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2123
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2372
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2384
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/tests/Feature/MessageTest.php:22
+   │
+ ✘ User can send message with attachments
+   │
+   │ MongoDB\Driver\Exception\ConnectionTimeoutException: No suitable servers found (`serverSelectionTryOnce` set): [Failed to resolve 'mongodb']. Topology type: Single
+   │
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/functions.php:600
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/functions.php:667
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/Collection.php:454
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/laravel-mongodb/src/Query/Builder.php:1025
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2123
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2372
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2384
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/tests/Feature/MessageTest.php:22
+   │
+ ✘ User cannot send empty message
+   │
+   │ MongoDB\Driver\Exception\ConnectionTimeoutException: No suitable servers found (`serverSelectionTryOnce` set): [Failed to resolve 'mongodb']. Topology type: Single
+   │
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/functions.php:600
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/functions.php:667
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/mongodb/src/Collection.php:454
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/mongodb/laravel-mongodb/src/Query/Builder.php:1025
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2123
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2372
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2384
+   │ /home/aumanh/Workspace/YuiChat/YuiChat_Backend/tests/Feature/MessageTest.php:22
+   │
+
+User (Tests\Feature\User)
+ ✔ Can get current user profile
+ ✔ Guest cannot get profile
+ ✔ Can search users by name or username
+ ✔ Search excludes current user
+ ✔ Search returns empty when no query
+
+ERRORS!
+Tests: 27, Assertions: 61, Errors: 5, Failures: 2.

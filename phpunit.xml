@@ -29,5 +29,8 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="BROADCAST_CONNECTION" value="log"/>
+        <env name="MONGO_DB_HOST" value="127.0.0.1"/>
+        <env name="MONGO_DB_DATABASE" value="yuichat_testing"/>
     </php>
 </phpunit>
