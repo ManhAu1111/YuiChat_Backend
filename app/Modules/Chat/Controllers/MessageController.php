@@ -117,6 +117,24 @@ class MessageController extends Controller
 
         broadcast(new MessageSent($messageWithRelations))->toOthers();
 
+        // Dispatch FCM Push Notifications
+        $recipientIds = Participant::where('conversation_id', $conversationId)
+            ->where('user_id', '!=', $authUserId)
+            ->pluck('user_id')
+            ->toArray();
+
+        if (!empty($recipientIds)) {
+            $senderName = $messageWithRelations->sender->name ?? 'Người dùng';
+            $title = "Tin nhắn mới từ " . $senderName;
+            $body = clone $message; // Prevent modification to the broadcasted object
+            $bodyText = $body->type === 'text' ? $body->content : "Đã gửi " . ($body->type === 'image' ? 'một ảnh' : 'một file');
+            
+            \App\Jobs\SendFcmNotification::dispatch($recipientIds, $title, $bodyText, [
+                'conversation_id' => (string) $conversationId,
+                'message_id' => (string) ($message->_id ?? $message->id)
+            ]);
+        }
+
         return response()->json($messageWithRelations, 201);
     }
 

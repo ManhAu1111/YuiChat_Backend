@@ -14,19 +14,23 @@ class DeviceController extends Controller
     {
         $request->validate([
             'device_id' => 'required|string',
+            'fcm_token' => 'nullable|string',
         ]);
 
         $user = $request->user();
 
         // Cập nhật hoặc tạo thiết bị
+        $updateData = ['last_active_at' => now()];
+        if ($request->has('fcm_token')) {
+            $updateData['fcm_token'] = $request->fcm_token;
+        }
+
         UserDevice::updateOrCreate(
             [
                 'user_id' => $user->id,
                 'device_id' => $request->device_id,
             ],
-            [
-                'last_active_at' => now(),
-            ]
+            $updateData
         );
 
         $wasOffline = !$user->is_online;
