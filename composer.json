@@ -6,7 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "kreait/laravel-firebase": "^7.2",
+        "kreait/laravel-firebase": "^7.0",
         "laravel/framework": "^11.0",
         "laravel/reverb": "^1.0",
         "laravel/sanctum": "^4.0",
@@ -68,6 +68,12 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "platform": {
+            "php": "8.2.0"
+        },
+        "audit": {
+            "block-insecure": false
         }
     },
     "minimum-stability": "stable",
